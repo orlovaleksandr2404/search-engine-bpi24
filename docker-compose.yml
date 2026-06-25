@@ -1,32 +1,8 @@
+
 services:
-  #Бэкенд
-  app:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: backend-app
-    env_file:
-      - .env
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgres
-      - elasticsearch
-      - redis
-    volumes:
-      - ./backend:/app
-      - /app/__pycache__
-    networks:
-      - app-network
-    restart: unless-stopped
-
-
-  #PostgreSQL
   postgres:
     image: postgres:15-alpine
-    container_name: backend-postgres
-    env_file:
-      - .env
+    container_name: bpi24_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -34,52 +10,22 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
+      - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
-  #Elasticsearch
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: backend-elasticsearch
+    image: elasticsearch:8.10.2
+    container_name: bpi24_elasticsearch
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - xpack.security.enabled=false
-      - bootstrap.memory_lock=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" 
     ports:
       - "9200:9200"
-      - "9300:9300"
     volumes:
-      - es_data:/usr/share/elasticsearch/data
-    networks:
-      - app-network
+      - esdata:/usr/share/elasticsearch/data
     restart: unless-stopped
-
-  #Redis
-  redis:
-    image: redis:7-alpine
-    container_name: backend-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - app-network
-    restart: unless-stopped
-
-
-#Сети и тома
-networks:
-  app-network:
-    driver: bridge
 
 volumes:
-  postgres_data:
-  es_data:
-  redis_data:
+  pgdata:
+  esdata:
