@@ -1,0 +1,15 @@
+# локальные настройки сред разработки
+.idea/
+.vscode/
+*.iml
+
+# Кэш Python
+__pycache__/
+*.pyc
+
+# Переменные окружения
+.env
+
+# Системные файлы windows
+*:Zone.Identifier
+Thumbs.db
