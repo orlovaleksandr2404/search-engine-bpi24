@@ -3,6 +3,7 @@ import re
 from typing import List, Tuple
 
 from elasticsearch import Elasticsearch
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ def create_index(index_name: str = None):
         logger.info(f"Индекс {index_name} уже существует")
         return
     except Exception:
-        logger.info(f"Индекс не найден, создаём новый")
+        logger.info("Индекс не найден, создаём новый")
 
     body = {
         "settings": {"number_of_shards": 1, "number_of_replicas": 0},

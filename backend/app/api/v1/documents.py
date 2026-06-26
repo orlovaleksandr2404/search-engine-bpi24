@@ -1,9 +1,10 @@
 import asyncio
-import uuid
 import logging
 import time
+import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, UploadFile, File, HTTPException
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.config import settings
 from app.models.schemas import DocumentUploadResponse
