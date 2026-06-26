@@ -38,6 +38,19 @@ services:
       - postgres
       - elasticsearch
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend_app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/frontend_run
+      - /frontend_run/node_modules
+    depends_on:
+      - app
+
 volumes:
   pgdata:
   esdata:
