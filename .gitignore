@@ -13,3 +13,13 @@ __pycache__/
 # Системные файлы windows
 *:Zone.Identifier
 Thumbs.db
+
+# Виртуальное окружение Python
+venv/
+env/
+.venv/
+
+# Node.js зависимости
+node_modules/
+dist/
+build/
