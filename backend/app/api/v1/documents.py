@@ -86,8 +86,8 @@ async def search_documents(q: str, size: int = 10):
     """
     Поиск по документам в Elasticsearch
     """
-    from app.services.elasticsearch_client import get_es_client
     from app.config import settings
+    from app.services.elasticsearch_client import get_es_client
 
     es = get_es_client()
     
