@@ -1,13 +1,12 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import documents
 
-app = FastAPI(
-    title="Поисковая система (прототип загрузки)",
-    description="эндпоинт /upload с валидацией",
-    version="0.1.0"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
+app = FastAPI(title="Поисковая система")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,9 +14,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.include_router(documents.router)
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+logger.info("Приложение запущено")
