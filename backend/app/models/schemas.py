@@ -1,5 +1,7 @@
-from pydantic import BaseModel, UUID4
 from datetime import datetime
+
+from pydantic import UUID4, BaseModel
+
 
 class DocumentUploadResponse(BaseModel):
     document_id: UUID4
