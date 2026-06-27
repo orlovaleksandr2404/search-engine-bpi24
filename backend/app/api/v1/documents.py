@@ -80,3 +80,49 @@ async def upload_document(file: UploadFile = File(...)):
         status="indexed",
         uploaded_at=datetime.now(timezone.utc)
     )
+
+@router.get("/search")
+async def search_documents(q: str, size: int = 10):
+    """
+    Поиск по документам в Elasticsearch
+    """
+    from app.config import settings
+    from app.services.elasticsearch_client import get_es_client
+
+    es = get_es_client()
+    
+    body = {
+        "query": {
+            "multi_match": {
+                "query": q,
+                "fields": ["text", "file_name"],
+                "fuzziness": "AUTO"
+            }
+        },
+        "size": size
+    }
+    
+    try:
+        response = es.search(index=settings.ELASTICSEARCH_INDEX, body=body)
+        hits = response.get("hits", {}).get("hits", [])
+        
+        results = []
+        for hit in hits:
+            source = hit["_source"]
+            results.append({
+                "chunk_id": source.get("chunk_id"),
+                "file_name": source.get("file_name"),
+                "page": source.get("page", 1),
+                "text": source.get("text", ""),
+                "score": hit.get("_score", 0.0)
+            })
+        
+        return {
+            "results": results,
+            "total": response.get("hits", {}).get("total", {}).get("value", 0),
+            "page": 1,
+            "page_size": size
+        }
+    except Exception as e:
+        logging.error(f"Ошибка поиска: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка выполнения поиска")
