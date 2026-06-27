@@ -50,6 +50,7 @@ export default function UploadZone({ onFileUpload, isUploading }: UploadZoneProp
 
   return (
     <div
+      className="upload-zone"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}

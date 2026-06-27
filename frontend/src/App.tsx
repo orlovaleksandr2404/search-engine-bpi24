@@ -115,7 +115,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+    <div className="app-container">
       <h1>📚 Поиск по документам</h1>
       
       <UploadZone onFileUpload={handleFileUpload} isUploading={isUploading} />

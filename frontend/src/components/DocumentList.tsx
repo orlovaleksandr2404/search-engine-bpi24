@@ -47,6 +47,7 @@ export default function DocumentList({ documents }: DocumentListProps) {
         {documents.map((doc) => (
           <div
             key={doc.id}
+            className="document-item"
             style={{
               display: 'flex',
               justifyContent: 'space-between',
