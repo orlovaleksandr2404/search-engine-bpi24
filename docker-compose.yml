@@ -51,6 +51,16 @@ services:
     depends_on:
       - app
 
+  redis:
+    image: redis:7-alpine
+    container_name: search_engine_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
 volumes:
   pgdata:
   esdata:
+  redis_data:
