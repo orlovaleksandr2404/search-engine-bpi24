@@ -16,7 +16,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px', margin: '20px 0' }}>
+    <form className="search-form" onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px', margin: '20px 0' }}>
       <input
         type="text"
         value={query}
@@ -45,7 +45,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
           opacity: isLoading || !query.trim() ? 0.6 : 1,
         }}
       >
-        {isLoading ? '...' : ''}
+        {isLoading ? 'Поиск...' : 'Найти'}
       </button>
     </form>
   );

@@ -106,15 +106,25 @@ async def search_documents(q: str, size: int = 10):
         response = es.search(index=settings.ELASTICSEARCH_INDEX, body=body)
         hits = response.get("hits", {}).get("hits", [])
         
+        max_score = 0.0
+        for hit in hits:
+            score = hit.get("_score", 0.0)
+            if score > max_score:
+                max_score = score
+        
         results = []
         for hit in hits:
             source = hit["_source"]
+            raw_score = hit.get("_score", 0.0)
+            # Нормализуем: делим на max_score, если он больше 0
+            normalized_score = raw_score / max_score if max_score > 0 else 0.0
+            
             results.append({
                 "chunk_id": source.get("chunk_id"),
                 "file_name": source.get("file_name"),
                 "page": source.get("page", 1),
                 "text": source.get("text", ""),
-                "score": hit.get("_score", 0.0)
+                "score": normalized_score
             })
         
         return {
