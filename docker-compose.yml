@@ -10,6 +10,8 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - search_network
     restart: unless-stopped
 
   elasticsearch:
@@ -23,6 +25,8 @@ services:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
+    networks:
+      - search_network
     restart: unless-stopped
 
   app:
@@ -37,6 +41,8 @@ services:
     depends_on:
       - postgres
       - elasticsearch
+    networks:
+      - search_network
 
   frontend:
     build:
@@ -50,6 +56,8 @@ services:
       - /frontend_run/node_modules
     depends_on:
       - app
+    networks:
+      - search_network
 
   redis:
     image: redis:7-alpine
@@ -59,8 +67,41 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - search_network
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: search_engine_prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - search_network
+    restart: always
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: search_engine_grafana
+    ports:
+      - "3001:3000"
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - search_network
 
 volumes:
   pgdata:
   esdata:
   redis_data:
+  grafana_data:
+
+networks:
+  search_network:
+    driver: bridge
