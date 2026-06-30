@@ -2,6 +2,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.v1 import documents
 
@@ -23,3 +24,5 @@ async def health():
     return {"status": "ok"}
 
 logger.info("Приложение запущено")
+
+Instrumentator().instrument(app).expose(app)
