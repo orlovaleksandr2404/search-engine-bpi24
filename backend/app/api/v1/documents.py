@@ -4,13 +4,13 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Query
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 
 from app.config import settings
 from app.models.schemas import DocumentUploadResponse
 from app.services.document_processor import process_document
 from app.services.elasticsearch_client import create_index, index_chunks
-from app.services.postgres_client import save_document_metadata, get_documents, count_documents
+from app.services.postgres_client import count_documents, get_documents, save_document_metadata
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
