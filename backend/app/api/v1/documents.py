@@ -5,14 +5,19 @@ import os
 import time
 import uuid
 from datetime import datetime, timezone
+<<<<<<< Updated upstream
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from redis import asyncio as aioredis
+=======
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query
+>>>>>>> Stashed changes
 
 from app.config import settings
 from app.models.schemas import DocumentUploadResponse
 from app.services.document_processor import process_document
 from app.services.elasticsearch_client import create_index, index_chunks
+from app.services.postgres_client import get_documents, count_documents, save_document_metadata
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
@@ -77,8 +82,10 @@ async def upload_document(file: UploadFile = File(...)):
         logger.info("Индексация чанков...")
         await loop.run_in_executor(None, index_chunks, str(doc_id), filename, processed["chunks"])
         logger.info("Индексация завершена")
+        # Сохраняем метаданные в PostgreSQL (статус indexed)
+        await loop.run_in_executor(None, save_document_metadata, doc_id, filename, "indexed")
     except Exception as e:
-        logger.error(f"Ошибка индексации: {e}")
+        logger.error(f"Ошибка индексации или сохранения: {e}")
         raise HTTPException(status_code=500, detail="Не удалось проиндексировать")
 
     return DocumentUploadResponse(
@@ -88,6 +95,7 @@ async def upload_document(file: UploadFile = File(...)):
         uploaded_at=datetime.now(timezone.utc)
     )
 
+<<<<<<< Updated upstream
 @router.get("/search")
 async def search_documents(q: str, size: int = 10):
     """
@@ -162,3 +170,27 @@ async def search_documents(q: str, size: int = 10):
     except Exception as e:
         logging.error(f"Ошибка поиска: {e}")
         raise HTTPException(status_code=500, detail="Ошибка выполнения поиска")
+=======
+
+@router.get("/")
+async def list_documents(
+    page: int = Query(1, ge=1, description="Номер страницы"),
+    size: int = Query(10, ge=1, le=100, description="Количество записей на страницу")
+):
+    """
+    Возвращает список загруженных документов с пагинацией.
+    Использует данные из PostgreSQL.
+    """
+    offset = (page - 1) * size
+    items = get_documents(limit=size, offset=offset)
+    total = count_documents()
+    total_pages = (total + size - 1) // size if size > 0 else 0
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": size,
+        "total_pages": total_pages
+    }
+>>>>>>> Stashed changes
