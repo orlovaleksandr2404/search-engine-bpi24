@@ -31,22 +31,22 @@ export default function App() {
   const [isUploading, setIsUploading] = useState(false);
 
   const handleSearch = async (query: string) => {
-  setIsLoading(true);
-  setLastQuery(query);
-  try {
-    const response = await fetch(`http://localhost:8000/api/v1/documents/search?q=${encodeURIComponent(query)}`);
-    if (!response.ok) {
-      throw new Error('Ошибка при выполнении поиска');
+    setIsLoading(true);
+    setLastQuery(query);
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/documents/search?q=${encodeURIComponent(query)}`);
+      if (!response.ok) {
+        throw new Error('Ошибка при выполнении поиска');
+      }
+      const data = await response.json();
+      setResults(data.results || []);
+    } catch (error) {
+      console.error('Ошибка поиска:', error);
+      setResults([]);
+    } finally {
+      setIsLoading(false);
     }
-    const data = await response.json();
-    setResults(data.results || []);
-  } catch (error) {
-    console.error('Ошибка поиска:', error);
-    setResults([]);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleFileUpload = async (file: File) => {
     if (file.size > 20 * 1024 * 1024) {
@@ -70,7 +70,7 @@ export default function App() {
 
     setDocuments(prev => {
       const updated = [...prev, newDoc];
-      localStorage.setItem('uploaded_documents', JSON.stringify(updated));
+      saveDocumentsToStorage(updated);
       return updated;
     });
     setIsUploading(true);
@@ -89,13 +89,13 @@ export default function App() {
         throw new Error(errorData.detail || 'Ошибка загрузки');
       }
 
-      const data = await response.json();
+      await response.json(); // data не используется, просто ждём ответ
 
       setDocuments(prev => {
         const updated = prev.map(doc =>
           doc.id === newDoc.id ? { ...doc, status: 'ready' } : doc
         );
-        localStorage.setItem('uploaded_documents', JSON.stringify(updated));
+        saveDocumentsToStorage(updated);
         return updated;
       });
     } catch (error) {
@@ -105,7 +105,7 @@ export default function App() {
         const updated = prev.map(doc =>
           doc.id === newDoc.id ? { ...doc, status: 'error' } : doc
         );
-        localStorage.setItem('uploaded_documents', JSON.stringify(updated));
+        saveDocumentsToStorage(updated);
         return updated;
       });
       alert('Ошибка при загрузке файла: ' + (error as Error).message);
