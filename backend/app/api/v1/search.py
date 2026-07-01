@@ -1,12 +1,13 @@
 import json
 import logging
 from typing import Optional
-from fastapi import APIRouter, Query, HTTPException, Depends
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from redis.asyncio import Redis
 
 from app.config import settings
-from app.services.elasticsearch_client import get_es_client
 from app.dependencies import get_redis_client
+from app.services.elasticsearch_client import get_es_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/documents", tags=["search"])
@@ -33,7 +34,7 @@ async def search_documents(
     except Exception as e:
         logger.warning(f"Redis недоступен: {e}")
 
-    logger.info(f"Cache MISS. Выполняем запрос к Elasticsearch")
+    logger.info("Cache MISS. Выполняем запрос к Elasticsearch")
 
     es = get_es_client()
     from_ = (page - 1) * size
