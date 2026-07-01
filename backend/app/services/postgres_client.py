@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
 Base = declarative_base()
 
 class DocumentMeta(Base):

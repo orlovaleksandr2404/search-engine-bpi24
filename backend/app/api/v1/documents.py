@@ -13,6 +13,7 @@ from app.services.elasticsearch_client import create_index, index_chunks
 from app.services.postgres_client import save_document_metadata, get_documents, count_documents
 
 logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 
 
