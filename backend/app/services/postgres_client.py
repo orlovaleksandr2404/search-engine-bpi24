@@ -9,9 +9,9 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config import settings
 
-
 logger = logging.getLogger(__name__)
 Base = declarative_base()
+
 
 class DocumentMeta(Base):
     __tablename__ = "documents"
@@ -20,6 +20,7 @@ class DocumentMeta(Base):
     status = Column(String(50), nullable=False, default="processing")
     uploaded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+
 DATABASE_URL = (
     f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
     f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
@@ -27,6 +28,7 @@ DATABASE_URL = (
 engine = create_engine(DATABASE_URL, echo=False)
 Base.metadata.create_all(bind=engine)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def save_document_metadata(doc_id: uuid.UUID, file_name: str, status: str) -> None:
     session = SessionLocal()
@@ -41,6 +43,7 @@ def save_document_metadata(doc_id: uuid.UUID, file_name: str, status: str) -> No
         raise
     finally:
         session.close()
+
 
 def get_documents(limit: int = 100, offset: int = 0) -> list[dict]:
     session = SessionLocal()
@@ -57,6 +60,7 @@ def get_documents(limit: int = 100, offset: int = 0) -> list[dict]:
         ]
     finally:
         session.close()
+
 
 def count_documents() -> int:
     session = SessionLocal()

@@ -10,8 +10,8 @@ from app.dependencies import get_redis_client
 from app.services.elasticsearch_client import get_es_client
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter(prefix="/api/v1/documents", tags=["search"])
+
 
 @router.get("/search")
 async def search_documents(
