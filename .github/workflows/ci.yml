@@ -80,6 +80,8 @@ jobs:
         run: |
           echo "Ожидаем 15 секунд, пока контейнеры запустятся и Prometheus начнет сбор метрик..."
           sleep 15
+
+          docker compose logs
           
           curl --fail http://localhost:8000/metrics || (echo "Критическая ошибка: контейнер бэкенда не поднялся или упал!" && exit 1)
           
