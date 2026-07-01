@@ -3,12 +3,23 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     MAX_FILE_SIZE: int = 20 * 1024 * 1024
-    ALLOWED_EXTENSIONS: set = {".pdf", ".docx"}
-    ELASTICSEARCH_HOST: str = "localhost"
+    ALLOWED_EXTENSIONS: set = {".pdf", ".docx", ".txt"}
+
+    ELASTICSEARCH_HOST: str = "elasticsearch"
     ELASTICSEARCH_PORT: int = 9200
     ELASTICSEARCH_INDEX: str = "documents"
 
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "secure_password_bpi24"
+    POSTGRES_DB: str = "knowledge_base"
+    POSTGRES_HOST: str = "postgres"
+    POSTGRES_PORT: int = 5432
+
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()

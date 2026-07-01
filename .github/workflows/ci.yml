@@ -15,7 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # симулируем наличие .env файла для сборки
       - name: Create env file
         run: cp .env.example .env || true
 
@@ -42,21 +41,26 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
         run: |
           cd frontend
-          npm install
+          npm install --legacy-peer-deps
 
       - name: Run ESLint (Frontend)
+        env:
+          ESLINT_USE_FLAT_CONFIG: false
         run: |
           cd frontend
-          npm run lint || echo "Фронтенд содержит ошибки линтера, исправьте позже"
+          npm run lint
 
-  build-docker-images:
+  # Сборка и симуляция Деплоя
+  build-and-deploy-simulation:
     runs-on: ubuntu-latest
-    name: Build Docker Images
+    name: Build Docker and Mock Deploy
     needs: lint-and-test
     steps:
       - name: Checkout code
@@ -68,6 +72,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker Compose Images
+      - name: Start Docker Compose (Simulated Deploy)
         run: |
-          docker compose build
+          docker compose up -d --build
+
+      - name: Run Infrastructure Smoke Test
+        run: |
+          echo "Ожидаем 15 секунд, пока контейнеры запустятся и Prometheus начнет сбор метрик..."
+          sleep 15
+          
+          curl --fail http://localhost:8000/metrics || (echo "Критическая ошибка: контейнер бэкенда не поднялся или упал!" && exit 1)
+          
+          echo "тест пройден! Метрики успешно отдаются из контейнера."
+
+      - name: Stop Containers
+        run: |
+          docker compose down
