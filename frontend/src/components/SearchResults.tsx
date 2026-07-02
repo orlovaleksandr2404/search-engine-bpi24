@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import type { SearchResult } from '../types';
 
 interface SearchResultsProps {
@@ -22,19 +22,48 @@ export default function SearchResults({
   hasMore,
   isLoadingMore
 }: SearchResultsProps) {
-  const observerRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+
+  useEffect(() => {
+    if (results.length === 0) {
+      setIsFirstLoad(true);
+    }
+  }, [results]);
+
   const lastElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (isLoadingMore) return;
-    if (observerRef.current) observerRef.current.disconnect();
+    if (isLoadingMore || !hasMore || results.length === 0) return;
+    
+    if (isFirstLoad) {
+      setIsFirstLoad(false);
+      return;
+    }
+
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
 
     observerRef.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore) {
+      if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+        console.log('🔄 Загружаем ещё...'); 
         onLoadMore();
       }
+    }, {
+      rootMargin: '50px',
     });
 
-    if (node) observerRef.current.observe(node);
-  }, [isLoadingMore, hasMore, onLoadMore]);
+    if (node) {
+      observerRef.current.observe(node);
+    }
+  }, [isLoadingMore, hasMore, onLoadMore, results.length, isFirstLoad]);
+
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
   if (results.length === 0) {
     return <p style={{ textAlign: 'center', color: '#666', marginTop: '20px' }}>

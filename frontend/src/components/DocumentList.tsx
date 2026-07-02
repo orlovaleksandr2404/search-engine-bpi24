@@ -24,6 +24,7 @@ export default function DocumentList({ documents }: DocumentListProps) {
     switch (status) {
       case 'uploading': return '⏳ Загрузка...';
       case 'indexing': return '🔄 Индексация...';
+      case 'indexed': return '✅ Готово';
       case 'ready': return '✅ Готово';
       case 'error': return '❌ Ошибка';
       default: return status;
@@ -34,6 +35,7 @@ export default function DocumentList({ documents }: DocumentListProps) {
     switch (status) {
       case 'uploading': return '#ffc107';
       case 'indexing': return '#17a2b8';
+      case 'indexed': return '#28a745';
       case 'ready': return '#28a745';
       case 'error': return '#dc3545';
       default: return '#6c757d';
