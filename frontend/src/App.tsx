@@ -1,40 +1,41 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import SearchBar from './components/SearchBar';
 import SearchResults from './components/SearchResults';
 import UploadZone from './components/UploadZone';
 import DocumentList from './components/DocumentList';
 import type { SearchResult, Document } from './types';
 
-const STORAGE_KEY = 'uploaded_documents';
-
-const loadDocumentsFromStorage = (): Document[] => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return [];
-    }
-  }
-  return [];
-};
-
-const saveDocumentsToStorage = (docs: Document[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
-};
-
 export default function App() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastQuery, setLastQuery] = useState('');
-  const [documents, setDocuments] = useState<Document[]>(loadDocumentsFromStorage());
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(false);
 
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
-  const currentQueryRef = useRef(''); 
+  const currentQueryRef = useRef('');
+
+  const fetchDocuments = async () => {
+    setIsLoadingDocs(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/documents/?page=1&size=100');
+      if (!response.ok) throw new Error('Ошибка загрузки списка документов');
+      const data = await response.json();
+      setDocuments(data.items || []);
+    } catch (error) {
+      console.error('Ошибка получения списка документов:', error);
+    } finally {
+      setIsLoadingDocs(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) return;
@@ -73,7 +74,7 @@ export default function App() {
     const nextPage = page + 1;
 
     try {
-      const url = `http://localhost:8000/api/v1/documents/search?q=${encodeURIComponent(currentQueryRef.current)}&size=10&page=${nextPage}`;
+      const url = `http://localhost:8000/api/v1/documents/search?q=${encodeURIComponent(currentQueryRef.current)}&size=3&page=${nextPage}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Ошибка загрузки следующей страницы');
@@ -112,11 +113,7 @@ export default function App() {
       status: 'uploading',
     };
 
-    setDocuments(prev => {
-      const updated = [...prev, newDoc];
-      saveDocumentsToStorage(updated);
-      return updated;
-    });
+    setDocuments(prev => [...prev, newDoc]);
     setIsUploading(true);
 
     try {
@@ -135,22 +132,15 @@ export default function App() {
 
       await response.json();
 
-      setDocuments(prev => {
-        const updated = prev.map(doc =>
-          doc.id === newDoc.id ? { ...doc, status: 'ready' } : doc
-        );
-        saveDocumentsToStorage(updated);
-        return updated;
-      });
+      await fetchDocuments();
+
     } catch (error) {
       console.error('Ошибка загрузки:', error);
-      setDocuments(prev => {
-        const updated = prev.map(doc =>
+      setDocuments(prev =>
+        prev.map(doc =>
           doc.id === newDoc.id ? { ...doc, status: 'error' } : doc
-        );
-        saveDocumentsToStorage(updated);
-        return updated;
-      });
+        )
+      );
       alert('Ошибка при загрузке файла: ' + (error as Error).message);
     } finally {
       setIsUploading(false);
@@ -163,7 +153,11 @@ export default function App() {
       
       <UploadZone onFileUpload={handleFileUpload} isUploading={isUploading} />
       
-      <DocumentList documents={documents} />
+      {isLoadingDocs ? (
+        <p>Загрузка списка документов...</p>
+      ) : (
+        <DocumentList documents={documents} />
+      )}
       
       <SearchBar onSearch={handleSearch} isLoading={isLoading} />
       
