@@ -16,7 +16,6 @@ export default function App() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [totalPages, setTotalPages] = useState(0);
   const currentQueryRef = useRef('');
 
   const fetchDocuments = async () => {
@@ -55,7 +54,6 @@ export default function App() {
       }
       const data = await response.json();
       setResults(data.results || []);
-      setTotalPages(data.total_pages || 0);
       setHasMore(data.page < data.total_pages);
       setPage(data.page || 1);
     } catch (error) {
@@ -82,7 +80,6 @@ export default function App() {
       const data = await response.json();
 
       setResults(prev => [...prev, ...(data.results || [])]);
-      setTotalPages(data.total_pages || 0);
       setHasMore(data.page < data.total_pages);
       setPage(data.page || nextPage);
     } catch (error) {
