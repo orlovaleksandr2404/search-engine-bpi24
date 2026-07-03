@@ -23,3 +23,8 @@ env/
 node_modules/
 dist/
 build/
+
+# Playwright test results
+frontend/test-results/
+frontend/playwright-report/
+frontend/test-results/

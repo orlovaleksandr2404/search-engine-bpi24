@@ -21,7 +21,7 @@ export default function App() {
   const fetchDocuments = async () => {
     setIsLoadingDocs(true);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/documents/?page=1&size=100');
+      const response = await fetch('/api/v1/documents/?page=1&size=100');
       if (!response.ok) throw new Error('Ошибка загрузки списка документов');
       const data = await response.json();
       setDocuments(data.items || []);
@@ -47,7 +47,7 @@ export default function App() {
     setHasMore(true);
 
     try {
-      const url = `http://localhost:8000/api/v1/documents/search?q=${encodeURIComponent(query)}&size=3&page=1`;
+      const url = `/api/v1/documents/search?q=${encodeURIComponent(query)}&size=3&page=1`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Ошибка при выполнении поиска');
@@ -72,7 +72,7 @@ export default function App() {
     const nextPage = page + 1;
 
     try {
-      const url = `http://localhost:8000/api/v1/documents/search?q=${encodeURIComponent(currentQueryRef.current)}&size=3&page=${nextPage}`;
+      const url = `/api/v1/documents/search?q=${encodeURIComponent(currentQueryRef.current)}&size=3&page=${nextPage}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Ошибка загрузки следующей страницы');
@@ -117,7 +117,7 @@ export default function App() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:8000/api/v1/documents/upload', {
+      const response = await fetch('/api/v1/documents/upload', {
         method: 'POST',
         body: formData,
       });
