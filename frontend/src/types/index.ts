@@ -1,4 +1,4 @@
-export type DocumentStatus = 'uploading' | 'indexing' | 'ready' | 'error';
+export type DocumentStatus = 'uploading' | 'indexing' | 'indexed' | 'ready' | 'error';
 
 export interface Document {
   id: string;
