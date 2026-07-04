@@ -16,20 +16,26 @@ logger = logging.getLogger(__name__)
 TEST_INDEX = "precision_eval"
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "..", "tests", "fixtures")
 
-QUERIES = [
-    {"q": "valid", "expected_file": "valid.pdf"},
-    {"q": "valid", "expected_file": "valid.docx"},
-    {"q": "custom fonts", "expected_file": "custom_fonts.pdf"},
-    {"q": "custom fonts", "expected_file": "custom_fonts.docx"},
-    {"q": "corrupted", "expected_file": "corrupted.pdf"},
-    {"q": "corrupted", "expected_file": "corrupted.docx"},
-    {"q": "empty", "expected_file": "empty.pdf"},
-    {"q": "empty", "expected_file": "empty.docx"},
-]
+def build_queries_from_files(fixtures_dir):
+    queries = []
+    if not os.path.exists(fixtures_dir):
+        return queries
+    for fname in os.listdir(fixtures_dir):
+        if not fname.lower().endswith(('.pdf', '.docx')):
+            continue
+        base = os.path.splitext(fname)[0]
+        queries.append({"q": base, "expected_file": fname})
+    return queries
+
+QUERIES = build_queries_from_files(FIXTURES_DIR)
 
 def main():
     if not os.path.exists(FIXTURES_DIR):
         logger.error(f"Папка с фикстурами не найдена: {FIXTURES_DIR}")
+        return
+
+    if not QUERIES:
+        logger.error("Нет файлов для индексации (не найдены .pdf или .docx)")
         return
 
     es = get_es_client()
@@ -54,6 +60,10 @@ def main():
     if indexed_count == 0:
         logger.error("Нет файлов для индексации")
         return
+
+    # !!! ПРИНУДИТЕЛЬНЫЙ REFRESH !!!
+    es.indices.refresh(index=TEST_INDEX)
+    logger.info(f"Индекс {TEST_INDEX} обновлён (refresh)")
 
     results = []
     for q in QUERIES:

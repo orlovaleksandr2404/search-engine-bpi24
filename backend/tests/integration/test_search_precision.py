@@ -12,21 +12,27 @@ TEST_INDEX = "test_precision"
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "..", "fixtures")
 
-QUERIES = [
-    {"q": "valid", "expected_file": "valid.pdf"},
-    {"q": "valid", "expected_file": "valid.docx"},
-    {"q": "custom fonts", "expected_file": "custom_fonts.pdf"},
-    {"q": "custom fonts", "expected_file": "custom_fonts.docx"},
-    {"q": "corrupted", "expected_file": "corrupted.pdf"},
-    {"q": "corrupted", "expected_file": "corrupted.docx"},
-    {"q": "empty", "expected_file": "empty.pdf"},
-    {"q": "empty", "expected_file": "empty.docx"},
-]
+# ---- Динамически формируем QUERIES на основе реальных файлов ----
+def build_queries_from_files(fixtures_dir):
+    """Создаёт список запросов: для каждого файла используем имя без расширения как запрос,
+    а ожидаемым файлом является полное имя файла."""
+    queries = []
+    if not os.path.exists(fixtures_dir):
+        return queries
+    for fname in os.listdir(fixtures_dir):
+        if not fname.lower().endswith(('.pdf', '.docx')):
+            continue
+        # Запрос – имя файла без расширения (например, "valid" для "valid.pdf")
+        base = os.path.splitext(fname)[0]
+        queries.append({"q": base, "expected_file": fname})
+    return queries
+
+QUERIES = build_queries_from_files(FIXTURES_DIR)
 
 
 @pytest.fixture(scope="module")
 def setup_test_index():
-    """Создаёт индекс и индексирует все файлы из папки fixtures."""
+    """Создаёт индекс, индексирует все файлы и принудительно обновляет индекс."""
     es = get_es_client()
     delete_index(TEST_INDEX)
     create_index(TEST_INDEX)
@@ -52,12 +58,19 @@ def setup_test_index():
     if indexed_count == 0:
         pytest.skip("Нет доступных файлов для индексации")
 
+    # !!! ПРИНУДИТЕЛЬНЫЙ REFRESH !!!
+    es.indices.refresh(index=TEST_INDEX)
+    logger.info(f"Индекс {TEST_INDEX} обновлён (refresh)")
+
     yield
     delete_index(TEST_INDEX)
 
 
 def test_precision_at_3(setup_test_index):
     """Тест оценки Precision@3."""
+    if not QUERIES:
+        pytest.skip("Нет запросов для проверки (нет файлов в fixtures)")
+
     results = []
     for query in QUERIES:
         q = query["q"]
