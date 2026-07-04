@@ -19,4 +19,4 @@ pnpm-debug.log*
 .idea/
 *.swp
 *.swo
-*~
+*~"test-results/" 
