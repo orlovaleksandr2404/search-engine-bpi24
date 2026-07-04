@@ -21,7 +21,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="  ..."
+        placeholder="Введите запрос..."
         style={{
           flex: 1,
           padding: '12px 16px',
