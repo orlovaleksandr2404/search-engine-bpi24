@@ -34,10 +34,10 @@ jobs:
       - name: Run Ruff Linter (Backend)
         run: ruff check backend/
 
-      - name: Run Pytest (Backend)
+      - name: Run Unit Tests (CI)
         env:
           PYTHONPATH: backend
-        run: pytest backend/tests/
+        run: pytest backend/tests/unit/ backend/tests/test_main.py -v
 
       # Фронтенд
       - name: Set up Node.js
@@ -78,15 +78,19 @@ jobs:
         run: |
           docker compose up -d --build
 
+      - name: Wait for Infrastructure to be ready
+        run: |
+          echo "Ожидаем 20 секунд полной готовности базы данных и Elasticsearch..."
+          sleep 20
+          docker compose logs
+
+      - name: Run Tests inside Container
+        run: |
+          docker compose exec -T app env PYTHONPATH=. pytest tests/integration/ -v
+
       - name: Run Infrastructure Smoke Test
         run: |
-          echo "Ожидаем 15 секунд, пока контейнеры запустятся и Prometheus начнет сбор метрик..."
-          sleep 15
-
-          docker compose logs
-          
           curl --fail http://localhost:8000/metrics || (echo "Критическая ошибка: контейнер бэкенда не поднялся или упал!" && exit 1)
-          
           echo "тест пройден! Метрики успешно отдаются из контейнера."
 
       - name: Stop Containers
