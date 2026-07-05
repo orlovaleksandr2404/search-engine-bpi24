@@ -1,10 +1,7 @@
 import pytest
-from app.services.document_processor import (
-    chunk_text,
-    process_document,
-    extract_text_from_pdf,
-    extract_text_from_docx
-)
+
+from app.services.document_processor import chunk_text, extract_text_from_docx, extract_text_from_pdf, process_document
+
 
 def test_chunk_text():
     """Проверка разбиения на чанки с перекрытием."""

@@ -1,13 +1,13 @@
-import os
-import sys
 import json
 import logging
+import os
+import sys
 from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from app.services.elasticsearch_client import get_es_client, create_index, delete_index, index_chunks
 from app.services.document_processor import process_document
+from app.services.elasticsearch_client import create_index, delete_index, get_es_client, index_chunks
 from app.services.elasticsearch_client import search as es_search
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -106,7 +106,9 @@ def main():
     print("="*60)
     for r in results:
         status = "✅" if r["found"] else "❌"
-        print(f"{status} Запрос: '{r['query']}' | Ожидаемый: {r['expected']} | Топ-3: {', '.join(r['top3'])}")
+        msg = (f"{status} Запрос: '{r['query']}' | Ожидаемый: {r['expected']} | "
+               f"Топ-3: {', '.join(r['top3'])}")
+        print(msg)
     print("="*60)
     print(f"Precision@3 = {precision:.2f}")
     print("="*60)

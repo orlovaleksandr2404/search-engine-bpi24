@@ -1,8 +1,10 @@
 import os
+
 import pytest
 from fastapi.testclient import TestClient
+
 from app.main import app
-from app.services.elasticsearch_client import get_es_client, create_index, delete_index
+from app.services.elasticsearch_client import create_index, delete_index, get_es_client
 
 TEST_INDEX = "test_documents"
 

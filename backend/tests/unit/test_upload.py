@@ -1,8 +1,11 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from fastapi import HTTPException
+
 from app.api.v1.documents import upload_document
 from app.config import settings
-from unittest.mock import patch, AsyncMock
+
 
 @pytest.mark.asyncio
 async def test_upload_invalid_extension():

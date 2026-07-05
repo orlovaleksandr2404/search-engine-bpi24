@@ -1,10 +1,12 @@
-import os
-import pytest
 import json
 import logging
+import os
 from datetime import datetime
-from app.services.elasticsearch_client import get_es_client, create_index, delete_index, index_chunks
+
+import pytest
+
 from app.services.document_processor import process_document
+from app.services.elasticsearch_client import create_index, delete_index, get_es_client, index_chunks
 from app.services.elasticsearch_client import search as es_search
 
 logger = logging.getLogger(__name__)
@@ -12,10 +14,7 @@ TEST_INDEX = "test_precision"
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "..", "fixtures")
 
 def extract_query_from_file(file_path: str) -> str:
-    """
-    Извлекает первые несколько слов из файла для использования в качестве поискового запроса.
-    Гарантирует, что запрос соответствует содержимому документа.
-    """
+    """Извлекает первые 5 слов из файла для использования в качестве поискового запроса."""
     try:
         with open(file_path, "rb") as f:
             file_bytes = f.read()
@@ -25,7 +24,6 @@ def extract_query_from_file(file_path: str) -> str:
             pages = extract_text_from_pdf(file_bytes)
             full_text = " ".join([text for text, _ in pages])
         elif ext == '.docx':
-            from app.services.document_processor import extract_text_from_docx
             from app.services.document_processor import extract_text_from_docx_fallback
             full_text = extract_text_from_docx_fallback(file_bytes)
         else:
@@ -37,7 +35,6 @@ def extract_query_from_file(file_path: str) -> str:
         return ""
 
 def build_queries_from_files(fixtures_dir):
-    """Создаёт список запросов: для каждого файла используем первые слова из его содержимого."""
     queries = []
     if not os.path.exists(fixtures_dir):
         return queries
@@ -48,8 +45,6 @@ def build_queries_from_files(fixtures_dir):
         query = extract_query_from_file(file_path)
         if query:
             queries.append({"q": query, "expected_file": fname})
-        else:
-            logger.warning(f"Для файла {fname} не удалось построить запрос – пропускаем")
     return queries
 
 QUERIES = build_queries_from_files(FIXTURES_DIR)
@@ -113,7 +108,9 @@ def test_precision_at_3(setup_test_index):
     print("="*60)
     for r in results:
         status = "✅" if r["found_in_top3"] else "❌"
-        print(f"{status} Запрос: '{r['query']}' | Ожидаемый: {r['expected_file']} | Топ-3: {', '.join(r['actual_top3'])}")
+        msg = (f"{status} Запрос: '{r['query']}' | Ожидаемый: {r['expected_file']} | "
+               f"Топ-3: {', '.join(r['actual_top3'])}")
+        print(msg)
     print("="*60)
     print(f"Precision@3 = {precision:.2f}")
     print("="*60)

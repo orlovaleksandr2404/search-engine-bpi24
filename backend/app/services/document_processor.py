@@ -1,6 +1,6 @@
+import logging
 import os
 import tempfile
-import logging
 import time
 from typing import List, Tuple
 
@@ -70,6 +70,7 @@ def extract_text_from_docx(file_bytes: bytes) -> List[Tuple[str, int]]:
         logger.error(f"Ошибка парсинга DOCX с wizarddocx: {e}")
         try:
             import tempfile
+
             from docx import Document
             with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
                 tmp.write(file_bytes)
