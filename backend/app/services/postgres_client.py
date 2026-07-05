@@ -14,6 +14,7 @@ Base = declarative_base()
 
 
 class DocumentMeta(Base):
+    """Модель SQLAlchemy для таблицы documents."""
     __tablename__ = "documents"
     id = Column(SQLUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     file_name = Column(String(255), nullable=False)
@@ -30,6 +31,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def save_document_metadata(doc_id: uuid.UUID, file_name: str, status: str) -> None:
+    """Сохраняет метаданные документа в БД."""
     session = SessionLocal()
     try:
         doc = DocumentMeta(id=doc_id, file_name=file_name, status=status)
@@ -45,6 +47,7 @@ def save_document_metadata(doc_id: uuid.UUID, file_name: str, status: str) -> No
 
 
 def get_documents(limit: int = 100, offset: int = 0) -> list[dict]:
+    """Возвращает список документов с пагинацией."""
     session = SessionLocal()
     try:
         docs = session.query(DocumentMeta).order_by(DocumentMeta.uploaded_at.desc()).offset(offset).limit(limit).all()
@@ -62,6 +65,7 @@ def get_documents(limit: int = 100, offset: int = 0) -> list[dict]:
 
 
 def count_documents() -> int:
+    """Возвращает общее количество документов."""
     session = SessionLocal()
     try:
         return session.query(func.count(DocumentMeta.id)).scalar() or 0

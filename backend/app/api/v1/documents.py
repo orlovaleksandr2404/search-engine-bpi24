@@ -18,6 +18,20 @@ router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 
 @router.post("/upload", response_model=DocumentUploadResponse)
 async def upload_document(file: UploadFile = File(...)):
+    """
+    Загружает документ, извлекает текст, разбивает на чанки и индексирует в Elasticsearch.
+
+    Args:
+        file (UploadFile): Загружаемый файл (PDF, DOCX или TXT).
+
+    Returns:
+        DocumentUploadResponse: Объект с UUID, именем файла, статусом и временем загрузки.
+
+    Raises:
+        HTTPException: 400 – неподдерживаемый формат или превышен размер;
+                       408 – таймаут обработки;
+                       500 – ошибка индексации.
+    """
     total_start = time.time()
     logger.info("=== НАЧАЛО ЗАГРУЗКИ ===")
     filename = file.filename or "unknown"
@@ -72,7 +86,6 @@ async def upload_document(file: UploadFile = File(...)):
         logger.info("Индексация чанков...")
         await loop.run_in_executor(None, index_chunks, str(doc_id), filename, processed["chunks"])
         logger.info("Индексация завершена")
-        # Сохраняем метаданные в PostgreSQL
         await loop.run_in_executor(None, save_document_metadata, doc_id, filename, "indexed")
     except Exception as e:
         logger.error(f"Ошибка индексации или сохранения: {e}")

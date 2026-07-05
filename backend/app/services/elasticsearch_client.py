@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 _es_client = None
 
 def get_es_client():
+    """Возвращает клиент Elasticsearch."""
     global _es_client
     if _es_client is None:
         _es_client = Elasticsearch(
@@ -20,6 +21,7 @@ def get_es_client():
     return _es_client
 
 def create_index(index_name: str = None):
+    """Создаёт индекс Elasticsearch, если он не существует."""
     if index_name is None:
         index_name = settings.ELASTICSEARCH_INDEX
     es = get_es_client()
@@ -49,6 +51,7 @@ def create_index(index_name: str = None):
         raise
 
 def delete_index(index_name: str = None):
+    """Удаляет индекс Elasticsearch."""
     if index_name is None:
         index_name = settings.ELASTICSEARCH_INDEX
     es = get_es_client()
@@ -62,6 +65,15 @@ def clean_text(text: str) -> str:
     return re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
 
 def index_chunks(doc_id: str, file_name: str, chunks: List[Tuple[str, int]], index_name: str = None):
+    """
+    Индексирует чанки документа в Elasticsearch.
+
+    Args:
+        doc_id (str): Идентификатор документа (UUID).
+        file_name (str): Имя файла.
+        chunks (List[Tuple[str, int]]): Список чанков (текст, страница).
+        index_name (str): Имя индекса (по умолчанию из настроек).
+    """
     if index_name is None:
         index_name = settings.ELASTICSEARCH_INDEX
     es = get_es_client()

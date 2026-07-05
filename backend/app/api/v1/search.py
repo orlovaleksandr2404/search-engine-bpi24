@@ -12,7 +12,23 @@ from app.services.elasticsearch_client import get_es_client
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/documents", tags=["search"])
 
+"""
+Выполняет полнотекстовый поиск с фильтрацией и кешированием.
 
+Args:
+    q (str): Поисковый запрос (обязательный).
+    file_name (Optional[str]): Фильтр по точному имени файла.
+    page_min (Optional[int]): Минимальный номер страницы.
+    page_max (Optional[int]): Максимальный номер страницы.
+    size (int): Количество результатов на страницу (1–100).
+    page (int): Номер страницы (начиная с 1).
+
+Returns:
+    dict: Словарь с ключами results, total, page, page_size, total_pages, took_ms.
+
+Raises:
+    HTTPException: 503 – если Elasticsearch недоступен.
+"""
 @router.get("/search")
 async def search_documents(
     q: str = Query(..., min_length=1, description="Поисковый запрос"),
@@ -26,7 +42,6 @@ async def search_documents(
     cache_key = f"search:{q}:{file_name}:{page_min}:{page_max}:{size}:{page}"
     logger.info(f"Поиск: '{q}', фильтры: file_name={file_name}, страницы {page_min}-{page_max}")
 
-    # Проверка кеша
     try:
         cached = await redis_client.get(cache_key)
         if cached:
@@ -91,12 +106,9 @@ async def search_documents(
     hits = response.get("hits", {}).get("hits", [])
     total = response.get("hits", {}).get("total", {}).get("value", 0)
 
-    # Вычисляем общее количество страниц
     total_pages = (total + size - 1) // size if size > 0 else 0
-    # Корректируем page, чтобы не выходить за пределы
     if page > total_pages and total_pages > 0:
         page = total_pages
-        # Можно также вернуть 404, но лучше вернуть последнюю страницу
 
     max_score = max((hit.get("_score", 0) for hit in hits), default=0.0)
     results = []
