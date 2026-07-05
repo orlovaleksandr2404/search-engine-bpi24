@@ -35,6 +35,8 @@ jobs:
         run: ruff check backend/
 
       - name: Run Pytest (Backend)
+        env:
+          PYTHONPATH: backend
         run: pytest backend/tests/
 
       # Фронтенд
