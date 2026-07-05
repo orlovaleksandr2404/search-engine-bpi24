@@ -1,3 +1,10 @@
+"""
+Конфигурация приложения.
+
+Загружает настройки из переменных окружения (файл .env) с помощью Pydantic Settings.
+Содержит параметры для Elasticsearch, PostgreSQL, Redis и ограничений файлов.
+"""
+
 from pydantic_settings import BaseSettings
 
 

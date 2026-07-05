@@ -1,3 +1,9 @@
+"""
+Pydantic-схемы для валидации запросов и сериализации ответов.
+
+Используются во всех эндпоинтах для гарантии структуры данных.
+"""
+
 from datetime import datetime
 
 from pydantic import UUID4, BaseModel

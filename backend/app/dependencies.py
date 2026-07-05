@@ -1,3 +1,9 @@
+"""
+Зависимости для внедрения (Dependency Injection).
+
+Предоставляет клиенты для Redis и других внешних сервисов.
+"""
+
 import logging
 
 from redis.asyncio import Redis
