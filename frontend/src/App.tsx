@@ -5,19 +5,32 @@ import UploadZone from './components/UploadZone';
 import DocumentList from './components/DocumentList';
 import type { SearchResult, Document } from './types';
 
+/**
+ * Главный компонент приложения.
+ * Управляет состоянием документов, поиском, загрузкой и пагинацией.
+ */
+
 export default function App() {
+  // Состояние результатов поиска
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastQuery, setLastQuery] = useState('');
+
+  // Состояние списка документов
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingDocs, setIsLoadingDocs] = useState(false);
 
+  // Состояние пагинации (бесконечный скролл)
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const currentQueryRef = useRef('');
 
+  /**
+   * Загружает список документов с бэкенда.
+   * Используется при загрузке страницы и после загрузки нового файла.
+   */
   const fetchDocuments = async () => {
     setIsLoadingDocs(true);
     try {
@@ -32,10 +45,15 @@ export default function App() {
     }
   };
 
+  // Загружаем документы при первом рендере
   useEffect(() => {
     fetchDocuments();
   }, []);
 
+  /**
+   * Выполняет поиск по запросу (первая страница).
+   * @param {string} query - Поисковый запрос.
+   */
   const handleSearch = async (query: string) => {
     if (!query.trim()) return;
 
@@ -65,6 +83,9 @@ export default function App() {
     }
   };
 
+  /**
+   * Подгружает следующую страницу результатов (бесконечный скролл).
+   */
   const loadMore = useCallback(async () => {
     if (isLoadingMore || isLoading || !hasMore || !currentQueryRef.current) return;
 
@@ -90,6 +111,10 @@ export default function App() {
     }
   }, [page, hasMore, isLoading, isLoadingMore]);
 
+  /**
+   * Загружает файл на сервер и обновляет список документов.
+   * @param {File} file - Загружаемый файл (PDF или DOCX).
+   */
   const handleFileUpload = async (file: File) => {
     if (file.size > 20 * 1024 * 1024) {
       alert('Файл слишком большой. Максимальный размер — 20 МБ.');
@@ -127,7 +152,14 @@ export default function App() {
         throw new Error(errorData.detail || 'Ошибка загрузки');
       }
 
-      await response.json();
+      const data = await response.json();
+      const uploadedAt = data.uploaded_at || newDoc.upload_date;
+      
+      setDocuments(prev =>
+        prev.map(doc =>
+          doc.id === newDoc.id ? { ...doc, status: 'ready', upload_date: uploadedAt } : doc
+        )
+      );
 
       await fetchDocuments();
 
@@ -135,7 +167,7 @@ export default function App() {
       console.error('Ошибка загрузки:', error);
       setDocuments(prev =>
         prev.map(doc =>
-          doc.id === newDoc.id ? { ...doc, status: 'error' } : doc
+          doc.id === newDoc.id ? { ...doc, status: 'error', upload_date: newDoc.upload_date } : doc
         )
       );
       alert('Ошибка при загрузке файла: ' + (error as Error).message);

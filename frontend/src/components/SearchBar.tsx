@@ -1,13 +1,28 @@
 import { useState } from 'react';
 
 interface SearchBarProps {
+
+  /**
+   * Функция, вызываемая при отправке формы поиска.
+   * @param query - Поисковый запрос.
+   */
   onSearch: (query: string) => void;
+  /** Флаг, указывающий, выполняется ли сейчас поиск (блокирует кнопку). */
   isLoading: boolean;
 }
 
+/**
+ * Компонент строки поиска.
+ * Содержит поле ввода и кнопку для отправки запроса.
+ */
 export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
   const [query, setQuery] = useState('');
 
+  /**
+   * Обработчик отправки формы.
+   * Предотвращает перезагрузку страницы и вызывает onSearch, если запрос не пустой.
+   * @param e - Событие отправки формы.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
