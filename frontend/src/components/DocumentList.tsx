@@ -61,6 +61,9 @@ export default function DocumentList({ documents }: DocumentListProps) {
             }}
           >
             <span style={{ fontWeight: '500' }}>{doc.file_name}</span>
+            <span style={{ fontSize: '12px', color: '#999' }}>
+              {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : 'Дата неизвестна'}
+            </span>
             <span style={{ 
               color: getStatusColor(doc.status),
               fontSize: '14px'

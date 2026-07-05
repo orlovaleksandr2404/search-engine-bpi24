@@ -127,7 +127,14 @@ export default function App() {
         throw new Error(errorData.detail || 'Ошибка загрузки');
       }
 
-      await response.json();
+      const data = await response.json();
+      const uploadedAt = data.uploaded_at || newDoc.upload_date;
+      
+      setDocuments(prev =>
+        prev.map(doc =>
+          doc.id === newDoc.id ? { ...doc, status: 'ready', upload_date: uploadedAt } : doc
+        )
+      );
 
       await fetchDocuments();
 
@@ -135,7 +142,7 @@ export default function App() {
       console.error('Ошибка загрузки:', error);
       setDocuments(prev =>
         prev.map(doc =>
-          doc.id === newDoc.id ? { ...doc, status: 'error' } : doc
+          doc.id === newDoc.id ? { ...doc, status: 'error', upload_date: newDoc.upload_date } : doc
         )
       );
       alert('Ошибка при загрузке файла: ' + (error as Error).message);

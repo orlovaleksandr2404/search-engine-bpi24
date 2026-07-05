@@ -4,6 +4,7 @@ export interface Document {
   id: string;
   file_name: string;
   upload_date: string;
+  uploaded_at?: string;
   status: DocumentStatus;
 }
 

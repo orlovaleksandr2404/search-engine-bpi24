@@ -81,7 +81,7 @@ export default function UploadZone({ onFileUpload, isUploading }: UploadZoneProp
         {isDragActive ? '   ' : '  '}
       </h3>
       <p style={{ margin: '0', color: '#666', fontSize: '14px' }}>
-         ,    (PDF, DOCX  20 )
+        PDF, DOCX — до 20 МБ
       </p>
       {isUploading && (
         <div style={{ marginTop: '16px' }}>
