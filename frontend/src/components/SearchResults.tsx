@@ -2,19 +2,34 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import type { SearchResult } from '../types';
 
 interface SearchResultsProps {
+  /** Массив результатов поиска. */
   results: SearchResult[];
+  /** Текущий поисковый запрос (используется для подсветки). */
   query: string;
+  /** Функция для загрузки следующей страницы. */
   onLoadMore: () => void;
+  /** Флаг, указывающий, есть ли ещё данные для подгрузки. */
   hasMore: boolean;
+  /** Флаг, указывающий, выполняется ли сейчас загрузка следующей страницы. */
   isLoadingMore: boolean;
 }
 
+/**
+ * Подсвечивает все вхождения поискового запроса в тексте.
+ * @param text - Исходный текст.
+ * @param query - Поисковый запрос.
+ * @returns Текст с обёрнутыми в <mark> совпадениями.
+ */
 const highlightText = (text: string, query: string) => {
   if (!query.trim()) return text;
   const regex = new RegExp(`(${query})`, 'gi');
   return text.replace(regex, '<mark>$1</mark>');
 };
 
+/**
+ * Компонент списка результатов поиска.
+ * Поддерживает бесконечный скролл через IntersectionObserver.
+ */
 export default function SearchResults({
   results,
   query,
@@ -25,15 +40,21 @@ export default function SearchResults({
   const observerRef = useRef<IntersectionObserver | null>(null);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
 
+  // Сбрасываем флаг первой загрузки при новом поиске
   useEffect(() => {
     if (results.length === 0) {
       setIsFirstLoad(true);
     }
   }, [results]);
 
+  /**
+   * Реф для последнего элемента списка.
+   * Настраивает IntersectionObserver для подгрузки следующей страницы.
+   */
   const lastElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoadingMore || !hasMore || results.length === 0) return;
     
+    // Пропускаем срабатывание при первой загрузке
     if (isFirstLoad) {
       setIsFirstLoad(false);
       return;
@@ -57,6 +78,7 @@ export default function SearchResults({
     }
   }, [isLoadingMore, hasMore, onLoadMore, results.length, isFirstLoad]);
 
+  // Очищаем observer при размонтировании
   useEffect(() => {
     return () => {
       if (observerRef.current) {
@@ -65,6 +87,7 @@ export default function SearchResults({
     };
   }, []);
 
+  // Если результатов нет - показываем сообщение
   if (results.length === 0) {
     return <p style={{ textAlign: 'center', color: '#666', marginTop: '20px' }}>
       По вашему запросу ничего не найдено. Попробуйте изменить формулировку.

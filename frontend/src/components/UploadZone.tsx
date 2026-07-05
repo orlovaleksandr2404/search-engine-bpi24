@@ -1,31 +1,53 @@
 import { useState, useRef } from 'react';
 
 interface UploadZoneProps {
+  /** Функция, вызываемая при выборе файла. */
   onFileUpload: (file: File) => void;
+  /** Флаг, указывающий, выполняется ли загрузка (блокирует зону). */
   isUploading: boolean;
 }
 
+/**
+ * Компонент зоны загрузки файлов.
+ * Поддерживает Drag-and-Drop и выбор через клик.
+ */
 export default function UploadZone({ onFileUpload, isUploading }: UploadZoneProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+ /**
+  * Обработчик события, когда файл перетаскивается в зону.
+  * Активирует визуальный фидбек (подсветку).
+  */
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(true);
   };
 
+ /**
+  * Обработчик события, когда файл покидает зону.
+  * Деактивирует визуальный фидбек.
+  */
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(false);
   };
 
+ /**
+  * Обработчик события, когда файл находится над зоной.
+  * Необходим для корректной работы Drag-and-Drop.
+  */
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
   };
 
+ /**
+  * Обработчик события, когда файл отпущен в зоне загрузки.
+  * Передаёт первый файл в onFileUpload.
+  */
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -37,6 +59,10 @@ export default function UploadZone({ onFileUpload, isUploading }: UploadZoneProp
     }
   };
 
+ /**
+  * Обработчик выбора файла через проводник.
+  * Передаёт первый файл в onFileUpload.
+  */
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -44,6 +70,9 @@ export default function UploadZone({ onFileUpload, isUploading }: UploadZoneProp
     }
   };
 
+ /**
+  * Симулирует клик по скрытому input[type="file"].
+  */
   const handleClick = () => {
     fileInputRef.current?.click();
   };

@@ -1,10 +1,16 @@
 import type { Document } from '../types';
 
 interface DocumentListProps {
+  /** Массив документов для отображения. */
   documents: Document[];
 }
 
+/**
+ * Компонент списка загруженных документов.
+ * Отображает название файла, дату загрузки и статус.
+ */
 export default function DocumentList({ documents }: DocumentListProps) {
+  // Если документов нет — показываем сообщение
   if (documents.length === 0) {
     return (
       <div style={{ 
@@ -20,6 +26,11 @@ export default function DocumentList({ documents }: DocumentListProps) {
     );
   }
 
+  /**
+   * Возвращает текстовую метку статуса документа.
+   * @param status - Статус документа.
+   * @returns Метка для отображения.
+   */
   const getStatusLabel = (status: Document['status']) => {
     switch (status) {
       case 'uploading': return '⏳ Загрузка...';
@@ -31,6 +42,11 @@ export default function DocumentList({ documents }: DocumentListProps) {
     }
   };
 
+  /**
+   * Возвращает цвет для статуса документа.
+   * @param status - Статус документа.
+   * @returns CSS-цвет.
+   */
   const getStatusColor = (status: Document['status']) => {
     switch (status) {
       case 'uploading': return '#ffc107';
