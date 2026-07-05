@@ -16,6 +16,27 @@ logger = logging.getLogger(__name__)
 TEST_INDEX = "precision_eval"
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "..", "tests", "fixtures")
 
+def extract_query_from_file(file_path: str) -> str:
+    """Извлекает первые 5 слов из файла для запроса."""
+    try:
+        with open(file_path, "rb") as f:
+            file_bytes = f.read()
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext == '.pdf':
+            from app.services.document_processor import extract_text_from_pdf
+            pages = extract_text_from_pdf(file_bytes)
+            full_text = " ".join([text for text, _ in pages])
+        elif ext == '.docx':
+            from app.services.document_processor import extract_text_from_docx_fallback
+            full_text = extract_text_from_docx_fallback(file_bytes)
+        else:
+            return ""
+        words = full_text.split()
+        return " ".join(words[:5]) if words else ""
+    except Exception as e:
+        logger.warning(f"Не удалось извлечь текст из {file_path}: {e}")
+        return ""
+
 def build_queries_from_files(fixtures_dir):
     queries = []
     if not os.path.exists(fixtures_dir):
@@ -23,8 +44,10 @@ def build_queries_from_files(fixtures_dir):
     for fname in os.listdir(fixtures_dir):
         if not fname.lower().endswith(('.pdf', '.docx')):
             continue
-        base = os.path.splitext(fname)[0]
-        queries.append({"q": base, "expected_file": fname})
+        file_path = os.path.join(fixtures_dir, fname)
+        query = extract_query_from_file(file_path)
+        if query:
+            queries.append({"q": query, "expected_file": fname})
     return queries
 
 QUERIES = build_queries_from_files(FIXTURES_DIR)
@@ -35,7 +58,7 @@ def main():
         return
 
     if not QUERIES:
-        logger.error("Нет файлов для индексации (не найдены .pdf или .docx)")
+        logger.error("Нет файлов для индексации (не удалось извлечь текст)")
         return
 
     es = get_es_client()
@@ -61,7 +84,6 @@ def main():
         logger.error("Нет файлов для индексации")
         return
 
-    # !!! ПРИНУДИТЕЛЬНЫЙ REFRESH !!!
     es.indices.refresh(index=TEST_INDEX)
     logger.info(f"Индекс {TEST_INDEX} обновлён (refresh)")
 

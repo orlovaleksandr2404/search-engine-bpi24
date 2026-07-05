@@ -5,13 +5,11 @@ import time
 from typing import List, Tuple
 
 import pdfplumber
-from docx import Document
-import wizarddocx as wd  # <-- Новая библиотека
+import wizarddocx as wd
 
 logger = logging.getLogger(__name__)
 
 
-# ---------- Извлечение текста из PDF (постранично) ----------
 def extract_text_from_pdf(file_bytes: bytes) -> List[Tuple[str, int]]:
     """
     Извлекает текст из PDF постранично.
@@ -44,7 +42,6 @@ def extract_text_from_pdf(file_bytes: bytes) -> List[Tuple[str, int]]:
             os.unlink(tmp_path)
 
 
-# ---------- Извлечение текста из DOCX (постранично) с помощью wizarddocx ----------
 def extract_text_from_docx(file_bytes: bytes) -> List[Tuple[str, int]]:
     """
     Извлекает текст из DOCX постранично, используя библиотеку wizarddocx.
@@ -54,17 +51,13 @@ def extract_text_from_docx(file_bytes: bytes) -> List[Tuple[str, int]]:
     logger.info("Начало извлечения текста из DOCX постранично (wizarddocx)")
 
     try:
-        # wizarddocx.extract_text возвращает текст всех страниц (без разделения) если pages=None
         full_text = wd.extract_text(file_bytes, extension="docx", pages=None)
 
-        # Разделяем страницы по символу form feed (\f) – стандартный разделитель
         if '\f' in full_text:
             pages_raw = full_text.split('\f')
         else:
-            # Если разделителя нет – считаем весь текст одной страницей
             pages_raw = [full_text]
 
-        # Формируем результат
         pages_text = []
         for idx, page_content in enumerate(pages_raw, start=1):
             if page_content and page_content.strip():
@@ -75,7 +68,6 @@ def extract_text_from_docx(file_bytes: bytes) -> List[Tuple[str, int]]:
 
     except Exception as e:
         logger.error(f"Ошибка парсинга DOCX с wizarddocx: {e}")
-        # Fallback: пробуем извлечь весь текст без страниц через python-docx
         try:
             import tempfile
             from docx import Document
@@ -95,7 +87,6 @@ def extract_text_from_docx(file_bytes: bytes) -> List[Tuple[str, int]]:
             return []
 
 
-# ---------- Чанкинг текста ----------
 def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 100, page_num: int = 1) -> List[Tuple[str, int]]:
     """
     Разбивает текст на чанки размером chunk_size с перекрытием overlap.
@@ -114,7 +105,6 @@ def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 100, page_num: 
     return chunks
 
 
-# ---------- Основная функция обработки документа ----------
 def process_document(file_name: str, file_bytes: bytes) -> dict:
     """
     Обрабатывает документ: извлекает текст постранично, разбивает на чанки с реальными номерами страниц.
@@ -135,7 +125,6 @@ def process_document(file_name: str, file_bytes: bytes) -> dict:
     if not pages:
         raise ValueError("В документе не найдено текста")
 
-    # Обрабатываем каждую страницу
     for page_text, page_num in pages:
         full_text += page_text + "\n"
         chunks = chunk_text(page_text, chunk_size=1000, overlap=100, page_num=page_num)

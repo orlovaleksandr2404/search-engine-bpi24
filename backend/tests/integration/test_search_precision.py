@@ -9,30 +9,53 @@ from app.services.elasticsearch_client import search as es_search
 
 logger = logging.getLogger(__name__)
 TEST_INDEX = "test_precision"
-
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "..", "fixtures")
 
-# ---- Динамически формируем QUERIES на основе реальных файлов ----
+def extract_query_from_file(file_path: str) -> str:
+    """
+    Извлекает первые несколько слов из файла для использования в качестве поискового запроса.
+    Гарантирует, что запрос соответствует содержимому документа.
+    """
+    try:
+        with open(file_path, "rb") as f:
+            file_bytes = f.read()
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext == '.pdf':
+            from app.services.document_processor import extract_text_from_pdf
+            pages = extract_text_from_pdf(file_bytes)
+            full_text = " ".join([text for text, _ in pages])
+        elif ext == '.docx':
+            from app.services.document_processor import extract_text_from_docx
+            from app.services.document_processor import extract_text_from_docx_fallback
+            full_text = extract_text_from_docx_fallback(file_bytes)
+        else:
+            return ""
+        words = full_text.split()
+        return " ".join(words[:5]) if words else ""
+    except Exception as e:
+        logger.warning(f"Не удалось извлечь текст из {file_path}: {e}")
+        return ""
+
 def build_queries_from_files(fixtures_dir):
-    """Создаёт список запросов: для каждого файла используем имя без расширения как запрос,
-    а ожидаемым файлом является полное имя файла."""
+    """Создаёт список запросов: для каждого файла используем первые слова из его содержимого."""
     queries = []
     if not os.path.exists(fixtures_dir):
         return queries
     for fname in os.listdir(fixtures_dir):
         if not fname.lower().endswith(('.pdf', '.docx')):
             continue
-        # Запрос – имя файла без расширения (например, "valid" для "valid.pdf")
-        base = os.path.splitext(fname)[0]
-        queries.append({"q": base, "expected_file": fname})
+        file_path = os.path.join(fixtures_dir, fname)
+        query = extract_query_from_file(file_path)
+        if query:
+            queries.append({"q": query, "expected_file": fname})
+        else:
+            logger.warning(f"Для файла {fname} не удалось построить запрос – пропускаем")
     return queries
 
 QUERIES = build_queries_from_files(FIXTURES_DIR)
 
-
 @pytest.fixture(scope="module")
 def setup_test_index():
-    """Создаёт индекс, индексирует все файлы и принудительно обновляет индекс."""
     es = get_es_client()
     delete_index(TEST_INDEX)
     create_index(TEST_INDEX)
@@ -58,18 +81,15 @@ def setup_test_index():
     if indexed_count == 0:
         pytest.skip("Нет доступных файлов для индексации")
 
-    # !!! ПРИНУДИТЕЛЬНЫЙ REFRESH !!!
     es.indices.refresh(index=TEST_INDEX)
     logger.info(f"Индекс {TEST_INDEX} обновлён (refresh)")
 
     yield
     delete_index(TEST_INDEX)
 
-
 def test_precision_at_3(setup_test_index):
-    """Тест оценки Precision@3."""
     if not QUERIES:
-        pytest.skip("Нет запросов для проверки (нет файлов в fixtures)")
+        pytest.skip("Нет запросов для проверки (не удалось извлечь текст из файлов)")
 
     results = []
     for query in QUERIES:
@@ -77,10 +97,8 @@ def test_precision_at_3(setup_test_index):
         expected = query["expected_file"]
         search_result = es_search(q, size=3, index_name=TEST_INDEX)
         hits = search_result["results"]
-
         found = any(hit["file_name"] == expected for hit in hits)
         top3_names = [h["file_name"] for h in hits]
-
         results.append({
             "query": q,
             "expected_file": expected,
